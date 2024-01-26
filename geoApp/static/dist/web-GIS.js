@@ -1,4 +1,3 @@
-// full screen map
 var mapId = document.getElementById("map");
 function fullScreenView() {
   if (document.fullscreenElement) {
@@ -8,16 +7,16 @@ function fullScreenView() {
   }
 }
 
-// leaflet browser print function
+//Leaflet browser print function
 L.control.browserPrint({ position: "topright" }).addTo(map);
 
-//leaflet search
+//Leaflet search
 L.Control.geocoder().addTo(map);
 
-// leaflet measure
+//Leaflet measure
 L.control
   .measure({
-    primaryLengthUnit: "kilometer",
+    primaryLengthUnit: "kilometers",
     secondaryLengthUnit: "meter",
     primaryAreaUnit: "sqmeters",
     secondaryAreaUnit: undefined,

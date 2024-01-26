@@ -16,8 +16,7 @@ from pg.pg import Pg
 # initializing the library
 db = Pg(dbname='geoapp', user='postgres',
         password='muthu12345', host='localhost', port='5432')
-geo = Geoserver('http://127.0.0.1:8080/geoserver',
-                username='admin', password='Skyblue@1002')
+geo = Geoserver('http://127.0.0.1:8080/geoserver', username='admin', password='Skyblue@1002')
 # Database connection string (postgresql://${database_user}:${databse_password}@${database_host}:${database_port}/${database_name}
 conn_str = 'postgresql://postgres:muthu12345@localhost:5432/geoapp'
 
@@ -38,7 +37,7 @@ class Shp(models.Model):
 # #########################################################################################
 # # Django post save signal
 # #########################################################################################
-# @receiver(post_save, sender=Shp)
+@receiver(post_save, sender=Shp)
 def publish_data(sender, instance, created, **kwargs):
     file = instance.file.path
     file_format = os.path.basename(file).split('.')[-1]
@@ -76,7 +75,9 @@ def publish_data(sender, instance, created, **kwargs):
 
     # publish shp to the geoserver using geoserver-rest
     geo.create_featurestore(store_name='geoApp', workspace='geoapp', db='geoapp',
-                            host='localhost', pg_user='postgres', pg_password='gicait123', schema='data')
+                            host='localhost', pg_user='postgres', pg_password='muthu12345', schema='data')
+    
+    
     geo.publish_featurestore(
         workspace='geoapp', store_name='geoApp', pg_table=name)
 

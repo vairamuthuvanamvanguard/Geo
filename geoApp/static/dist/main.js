@@ -2,48 +2,50 @@
 var map = L.map("map").setView([21.0, 78.0], 5);
 map.zoomControl.setPosition("topright");
 
-// adding osm titlelayer
-var osm = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+// adding osm tilelayer
+var osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution:
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 }).addTo(map);
 
-var Esri_NatGeoWorldMap = L.tileLayer(
-  "https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}",
+var watercolorMap = L.tileLayer(
+  "https://stamen-tiles-{s}.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.{ext}",
   {
     attribution:
-      "Tiles &copy; Esri &mdash; National Geographic, Esri, DeLorme, NAVTEQ, UNEP-WCMC, USGS, NASA, ESA, METI, NRCAN, GEBCO, NOAA, iPC",
-    maxZoom: 16,
-  }
-);
-
-var CartoDB_DarkMatter = L.tileLayer(
-  "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-  {
-    attribution:
-      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     subdomains: "abcd",
-    maxZoom: 20,
+    minZoom: 1,
+    maxZoom: 16,
+    ext: "jpg",
   }
 );
 
-// Addng marker in the center of the map
-var singlemarker = L.marker([20.5937, 78.9629])
-  .addTo(map)
-  .bindPopup("A pretty CSS popup.<br> Easily customizable.")
+var st = L.tileLayer(
+  "https://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}{r}.{ext}",
+  {
+    attribution:
+      'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    subdomains: "abcd",
+    minZoom: 0,
+    maxZoom: 20,
+    ext: "png",
+  }
+);
+
+//Addming marker in the center of map
+var singleMarker = L.marker([20.5937, 78.9629])
+  .bindPopup("A pretty CSS3 popup.<br> Easily customizable.")
   .openPopup();
 
-// add map scale
-L.control.scale({ position: "bottomright" }).addTo(map);
+//add map scale
+L.control.scale().addTo(map);
 
-//  mouse co-ordinates
+//Map coordinate display
 map.on("mousemove", function (e) {
-  $(".coordinate").html(
-    `Latitute: ${e.latlng.lat} Longitutde:${e.latlng.lng} `
-  );
+  $(".coordinate").html(`Lat: ${e.latlng.lat} Lng: ${e.latlng.lng}`);
 });
 
-// Geojson load
+//Geojson load
 var marker = L.markerClusterGroup();
 var taji = L.geoJSON(data, {
   onEachFeature: function (feature, layer) {
@@ -53,15 +55,16 @@ var taji = L.geoJSON(data, {
 taji.addTo(marker);
 marker.addTo(map);
 
+//Leaflet layer control
 var baseMaps = {
   OSM: osm,
-  "World Map": Esri_NatGeoWorldMap,
-  "Light Map": CartoDB_DarkMatter,
+  "Water Color Map": watercolorMap,
+  "Stamen Toner": st,
 };
 
 var overlayMaps = {
-  "GeoJson Markers": marker,
-  singlemarker: singlemarker,
+  "GeoJSON Markers": marker,
+  "Single Marker": singleMarker,
 };
 
 L.control
