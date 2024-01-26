@@ -82,8 +82,49 @@
 <script src="{% static './dist/main.js' %}"></script>
 <script src="{% static './dist/web-GIS.js' %}"></script>
 <script>
+  $(".leaflet-prevent").on("click", L.DomEvent.stopPropagation);
+var mapPinToggler =true;
+$('.pin').on('click', function(){
+    if(mapPinToggler){
+    map.on('click', function(e){
+        var lat = e.latlng.lat;
+        var lng = e.latlng.lng;
+        var popup = `<form action="{% url 'note' %}" method="POST">
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="note heading">Note heading</label>
+          <input type="text" name='note_heading' class="form-control" placeholder="Enter note heading">
+        </div>
 
-var overlayMaps = {};
+        <input type="hidden" name="lat" value="${lat}">
+        <input type="hidden" name="lng" value ="${lng}">
+
+        <div class="form-group">
+          <label for="note">Note</label>
+          <textarea class='form-control' name="note_des" >Enter note here</textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+      </form>`;
+        var marker = L.marker([e.latlng.lat, e.latlng.lng]).bindPopup(popup);
+        marker.addTo(map)
+    })
+    mapPinToggler = !mapPinToggler;
+}else {
+    map.off('click')
+}
+})
+    var markerGroup = new L.featureGroup()
+    {% for n in note %}
+        var lat = {{n.lat}}
+        var lng = {{n.lng}}
+        var marker = L.marker([lat, lng]).bindPopup(`<h3>{{n.note_heading}}</h3><p>{{n.note}}</p>`)
+        marker.addTo(markerGroup)
+    {% endfor %}
+
+
+    var overlayMaps = {
+        'Notes': markerGroup
+    };
 
 {% for s in shp %}
 
