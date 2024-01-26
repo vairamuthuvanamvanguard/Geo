@@ -23,7 +23,7 @@ L.control
   })
   .addTo(map);
 
-// zoom layer for the view
+//zoom to layer
 $(".zoom-to-layer").click(function () {
   map.setView([21.0, 78.0], 5);
 });

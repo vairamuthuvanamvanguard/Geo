@@ -61,12 +61,3 @@ var baseMaps = {
   "Water Color Map": watercolorMap,
   "Stamen Toner": st,
 };
-
-// var overlayMaps = {
-//   "GeoJSON Markers": marker,
-//   "Single Marker": singleMarker,
-// };
-
-// L.control
-//   .layers(baseMaps, overlayMaps, { collapsed: false, position: "topleft" })
-//   .addTo(map);
