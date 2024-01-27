@@ -92,7 +92,8 @@ DATABASES = {
         'NAME': 'geoapp',
         'USER': 'postgres',
         'PASSWORD': 'muthu12345',
-        'HOST': 'database-1.cla06cywkakj.ap-south-1.rds.amazonaws.com',
+        # 'HOST': 'database-1.cla06cywkakj.ap-south-1.rds.amazonaws.com',
+        'HOST': 'localhost',
         'PORT': '5432',
     }
 }        
@@ -140,12 +141,12 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 
-AWS_ACCESS_KEY_ID = 'AKIAYS2NV5DW6WVZIGBC '
-AWS_SECRET_ACCESS_KEY = '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'
-AWS_STORAGE_BUCKET_NAME = 'geoproject1'
-AWS_S3_SIGNATURE_NAME = 's3v4',
-AWS_S3_REGION_NAME = 'ap-south-1'
-AWS_S3_FILE_OVERWRITE = False
-AWS_DEFAULT_ACL =  None
-AWS_S3_VERITY = True
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'        
+# AWS_ACCESS_KEY_ID = 'AKIAYS2NV5DW6WVZIGBC '
+# AWS_SECRET_ACCESS_KEY = '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'
+# AWS_STORAGE_BUCKET_NAME = 'geoproject1'
+# AWS_S3_SIGNATURE_NAME = 's3v4',
+# AWS_S3_REGION_NAME = 'ap-south-1'
+# AWS_S3_FILE_OVERWRITE = False
+# AWS_DEFAULT_ACL =  None
+# AWS_S3_VERITY = True
+# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'        

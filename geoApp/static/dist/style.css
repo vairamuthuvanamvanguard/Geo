@@ -29,21 +29,14 @@
     background-color: #fff;
     position:absolute;
     right: 10px;
-    top:260px;
+    top:240px;
 }
 
-.zoom-to-layer{
-    padding: 7px;
-    background-color: #fff;
-    position:absolute;
-    right: 10px;
-    top:290px;
-}
 
 .pin{
     padding: 7px;
     background-color: #fff;
     position:absolute;
     right: 10px;
-    top:350px;
+    top:280px;
 }
