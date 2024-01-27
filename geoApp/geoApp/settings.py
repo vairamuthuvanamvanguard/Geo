@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 from pathlib import Path
 import os
-
+from decouple import config
 
 if os.name == 'nt':
     VENV_BASE = os.environ['VIRTUAL_ENV']
@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'storages',
     'shp',
     'tiff',
     'note',
@@ -87,14 +88,15 @@ WSGI_APPLICATION = "geoApp.wsgi.application"
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'geoapp',
         'USER': 'postgres',
         'PASSWORD': 'muthu12345',
-        'HOST': 'localhost',
+        'HOST': 'database-1.cla06cywkakj.ap-south-1.rds.amazonaws.com',
         'PORT': '5432',
     }
-}
+}        
+
 
 
 # Password validation
@@ -133,3 +135,17 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'geoApp/static')]
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+
+
+
+AWS_ACCESS_KEY_ID = 'AKIAYS2NV5DW6WVZIGBC '
+AWS_SECRET_ACCESS_KEY = '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'
+AWS_STORAGE_BUCKET_NAME = 'geoproject1'
+AWS_S3_SIGNATURE_NAME = 's3v4',
+AWS_S3_REGION_NAME = 'ap-south-1'
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL =  None
+AWS_S3_VERITY = True
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'        
