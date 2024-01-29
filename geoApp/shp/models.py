@@ -1,24 +1,43 @@
-from django.db import models
+import os
 import datetime
+import zipfile
+import tempfile
+import boto3
+import glob
+from django.db import models
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 import geopandas as gpd
-import os
-import glob
-import zipfile
-from sqlalchemy import *
+from sqlalchemy import create_engine
 from geo.Geoserver import Geoserver
 from pg.pg import Pg
+
+
+# Database and GeoServer initialization
+
+geo = Geoserver('http://127.0.0.1:8080/geoserver', username='admin', password='Skyblue@1002')
+conn_str = 'postgresql://postgres:muthu12345@database-1.cla06cywkakj.ap-south-1.rds.amazonaws.com'
+
+
+s3_client = boto3.client(
+    's3',
+   aws_access_key_id='AKIAYS2NV5DW6WVZIGBC',
+    aws_secret_access_key='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',
+    region_name='ap-south-1'
+)
+
+db = Pg(dbname='geoapp', user='postgres',
+        password='muthu12345', host='database-1.cla06cywkakj.ap-south-1.rds.amazonaws.com', port='5432')
+
 
 ####################################################################################
 # Please change the Pg parameters, Geoserver parameters and conn_str
 ####################################################################################
 # initializing the library
-db = Pg(dbname='geoapp', user='postgres',
-        password='muthu12345', host='localhost', port='5432')
+
 geo = Geoserver('http://127.0.0.1:8080/geoserver', username='admin', password='Skyblue@1002')
 # Database connection string (postgresql://${database_user}:${databse_password}@${database_host}:${database_port}/${database_name}
-conn_str = 'postgresql://postgres:muthu12345@localhost:5432/geoapp'
+conn_str = 'postgresql://postgres:muthu12345@database-1.cla06cywkakj.ap-south-1.rds.amazonaws.com:5432/geoapp'
 
 
 ######################################################################################
@@ -28,68 +47,65 @@ conn_str = 'postgresql://postgres:muthu12345@localhost:5432/geoapp'
 class Shp(models.Model):
     name = models.CharField(max_length=50)
     description = models.CharField(max_length=1000, blank=True)
-    file = models.FileField(upload_to='%Y/%m/%d')
+    file = models.FileField(upload_to='shps/%Y/%m/%d')
     uploaded_date = models.DateField(default=datetime.date.today, blank=True)
 
     def __str__(self):
         return self.name
+
 
 # #########################################################################################
 # # Django post save signal
 # #########################################################################################
 @receiver(post_save, sender=Shp)
 def publish_data(sender, instance, created, **kwargs):
-    file = instance.file.path
-    file_format = os.path.basename(file).split('.')[-1]
-    file_name = os.path.basename(file).split('.')[0]
-    file_path = os.path.dirname(file)
-    name = instance.name
+    if not created:
+        return
 
-    # extract zipfile
-    with zipfile.ZipFile(file, 'r') as zip_ref:
-        zip_ref.extractall(file_path)
+    file_key = instance.file.name
 
-    os.remove(file)  # remove zip file
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        local_file_path = os.path.join(tmp_dir, os.path.basename(file_key))
 
-    shp = glob.glob(r'{}/**/*.shp'.format(file_path),
-                    recursive=True)  # to get shp
-    try:
-        req_shp = shp[0]
-        gdf = gpd.read_file(req_shp)  # make geodataframe
+        # Download the file from S3
+        s3_client.download_file('geoproject1', file_key, local_file_path)
+
+        # Extract the zipfile
+        with zipfile.ZipFile(local_file_path, 'r') as zip_ref:
+            zip_ref.extractall(tmp_dir)
+        
+        # Find .shp file in the extracted files
+        shp_files = glob.glob(f'{tmp_dir}/**/*.shp', recursive=True)
+        if not shp_files:
+            raise ValueError("No .shp file found in the uploaded zipfile.")
+
+        req_shp = shp_files[0]
+        gdf = gpd.read_file(req_shp)  # Make GeoDataFrame
         engine = create_engine(conn_str)
-        gdf.to_postgis(
-            con=engine,
-            schema='data',
-            name=name,
-            if_exists="replace")
 
-        for s in shp:
-            os.remove(s)
+        # Write GeoDataFrame to PostGIS
+        gdf.to_postgis(con=engine, schema='data', name=instance.name, if_exists="replace")
 
-    except Exception as e:
-        for s in shp:
-            os.remove(s)
+        # Publish .shp to the geoserver
+        geo.create_featurestore(store_name='geoApp', workspace='geoapp', db='geoapp',
+                                host='database-1.cla06cywkakj.ap-south-1.rds.amazonaws.com', 
+                                pg_user='postgres', pg_password='muthu12345', schema='data')
+        geo.publish_featurestore(workspace='geoapp', store_name='geoApp', pg_table=instance.name)
+        geo.create_outline_featurestyle('geoApp_shp', workspace='geoapp')
+        geo.publish_style(layer_name=instance.name, style_name='geoApp_shp', workspace='geoapp')
 
-        instance.delete()
-        print("There is problem during shp upload: ", e)
 
-    # publish shp to the geoserver using geoserver-rest
-    geo.create_featurestore(store_name='geoApp', workspace='geoapp', db='geoapp',
-                            host='localhost', pg_user='postgres', pg_password='muthu12345', schema='data')
-    
-    
-    geo.publish_featurestore(
-        workspace='geoapp', store_name='geoApp', pg_table=name)
-
-    geo.create_outline_featurestyle('geoApp_shp', workspace='geoapp')
-
-    geo.publish_style(
-        layer_name=name, style_name='geoApp_shp', workspace='geoapp')
 
 #########################################################################################
 # Django post delete signal
 #########################################################################################
 @receiver(post_delete, sender=Shp)
 def delete_data(sender, instance, **kwargs):
+    # Delete the file from S3
+    # s3_client.delete_object(Bucket='geoproject1', Key=instance.file.name)
+
+    # Delete table and layer from GeoServer and PostGIS
     db.delete_table(instance.name, schema='data')
     geo.delete_layer(instance.name, 'geoapp')
+
+
