@@ -34,7 +34,8 @@ SECRET_KEY = "!uw!&$hf-ucj&m6qepwb31&p%xmef*=woehnwbest#twydr^vm"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS=['EC2_DNS_NAME']
+ALLOWED_HOSTS=['3.110.174.81']
+# Public IPv4 address -3.110.174.81
 # windows ec  n-HAEU?IepJul4;TJFo3fk9)wqTNdC?7
 # Application definition
 
