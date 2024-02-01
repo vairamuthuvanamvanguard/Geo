@@ -1,5 +1,4 @@
 GDAL
-Fiona
 pycurl
 pyproj
 Shapely

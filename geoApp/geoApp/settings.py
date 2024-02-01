@@ -36,7 +36,7 @@ DEBUG = True
 
 ALLOWED_HOSTS=['3.110.174.81']
 # Public IPv4 address -3.110.174.81
-# windows ec  n-HAEU?IepJul4;TJFo3fk9)wqTNdC?7
+# windows ec &CLR8Z=2OgG3i4Dbo2XxUWcFWYtZLawF
 # Application definition
 
 INSTALLED_APPS = [
