@@ -34,7 +34,7 @@ SECRET_KEY = "!uw!&$hf-ucj&m6qepwb31&p%xmef*=woehnwbest#twydr^vm"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS=['3.110.174.81']
+ALLOWED_HOSTS=['*']
 # Public IPv4 address -3.110.174.81
 # windows ec &CLR8Z=2OgG3i4Dbo2XxUWcFWYtZLawF
 # Application definition

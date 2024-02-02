@@ -23,7 +23,7 @@ s3_client = boto3.client(
 )
 
 # Initialize GeoServer
-geo = Geoserver('http://127.0.0.1:8080/geoserver', username='admin', password='Skyblue@1002')
+geo = Geoserver('http://3.110.174.81:8080/geoserver', username='admin', password='Skyblue@1002')
 
 # TIFF Model
 class Tiff(models.Model):
