@@ -35,7 +35,7 @@ SECRET_KEY = "!uw!&$hf-ucj&m6qepwb31&p%xmef*=woehnwbest#twydr^vm"
 DEBUG = True
 
 ALLOWED_HOSTS=['*']
-# Public IPv4 address -15.206.186.153
+# Public IPv4 address -15.206.186.58
 # windows ec &CLR8Z=2OgG3i4Dbo2XxUWcFWYtZLawF
 # Application definition
 
