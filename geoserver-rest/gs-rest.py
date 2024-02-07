@@ -2,7 +2,7 @@
 from geo.Geoserver import Geoserver
 
 # Initialize the library
-geo = Geoserver('http://15.206.186.153:8080/geoserver', username='admin', password='Skyblue@1002')
+geo = Geoserver('http://13.233.162.170:8080/geoserver', username='admin', password='Skyblue@1002')
 
 # For creating workspace
 # geo.create_workspace(workspace='demo')

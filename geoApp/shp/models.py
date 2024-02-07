@@ -15,7 +15,7 @@ from pg.pg import Pg
 
 # Database and GeoServer initialization
 
-geo = Geoserver('http://15.206.186.153:8080/geoserver', username='admin', password='Skyblue@1002')
+geo = Geoserver('http://13.233.162.170:8080/geoserver', username='admin', password='Skyblue@1002')
 conn_str = 'postgresql://postgres:muthu12345@database-1.cla06cywkakj.ap-south-1.rds.amazonaws.com'
 
 
@@ -35,7 +35,7 @@ db = Pg(dbname='geoapp', user='postgres',
 ####################################################################################
 # initializing the library
 
-geo = Geoserver('http://15.206.186.153:8080/geoserver', username='admin', password='Skyblue@1002')
+geo = Geoserver('http://13.233.162.170:8080/geoserver', username='admin', password='Skyblue@1002')
 # Database connection string (postgresql://${database_user}:${databse_password}@${database_host}:${database_port}/${database_name}
 conn_str = 'postgresql://postgres:muthu12345@database-1.cla06cywkakj.ap-south-1.rds.amazonaws.com:5432/geoapp'
 
