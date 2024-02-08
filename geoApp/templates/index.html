@@ -211,7 +211,7 @@
 
   {% for s in shp %}
 
-  var {{ s.name}} = L.tileLayer.wms('http://13.233.162.170:8080/geoserver/wms', {
+  var {{ s.name}} = L.tileLayer.wms('http://13.201.54.187:8080/geoserver/wms', {
     layers: '{{s.name}}',
     transparent: true,
     format: 'image/png',
@@ -223,7 +223,7 @@
 
   //Tiff was
   {% for t in tiff %}
-      var {{ t.name }} = L.tileLayer.wms('http://13.233.162.170:8080/geoserver/wms', {
+      var {{ t.name }} = L.tileLayer.wms('http://13.201.54.187:8080/geoserver/wms', {
           layers: '{{t.name}}',
           transparent: true,
           format: 'image/png',

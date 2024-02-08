@@ -15,7 +15,7 @@ from pg.pg import Pg
 
 # Database and GeoServer initialization
 
-geo = Geoserver('http://13.233.162.170:8080/geoserver', username='admin', password='Skyblue@1002')
+geo = Geoserver('http://13.201.54.187:8080/geoserver', username='admin', password='Skyblue@1002')
 conn_str = 'postgresql://postgres:muthu12345@database-1.cla06cywkakj.ap-south-1.rds.amazonaws.com'
 
 
