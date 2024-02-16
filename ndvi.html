@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>Upload TIFF and KML Files</h2>
+
+<input type="file" id="tiffFile" name="tiffFile">
+<input type="file" id="kmlFile" name="kmlFile">
+<button onclick="uploadFiles()">Upload and Process</button>
+
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.813.0.min.js"></script>
+<script>
+// Initialize the Amazon Cognito credentials provider
+AWS.config.region = 'us-east-1'; // Region
+AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+    IdentityPoolId: 'ap-south-1:4b8b58d1-078c-4703-bfaa-acbf0df39c7f',
+});
+
+var s3 = new AWS.S3({
+    apiVersion: '2006-03-01',
+    params: {Bucket: 'YOUR_S3_BUCKET_NAME'}
+});
+
+function uploadFileToS3(file, callback) {
+    if (!file) {
+        return callback('No file selected');
+    }
+
+    var fileName = file.name;
+    var filePath = 'uploads/' + fileName; // Example path in bucket
+    var fileUrl = `https://${s3.config.params.Bucket}.s3.amazonaws.com/${filePath}`;
+
+    s3.upload({
+        Key: filePath,
+        Body: file,
+        ACL: 'public-read' // Adjust ACL as needed
+    }, function(err, data) {
+        if (err) {
+            console.error('Upload error:', err);
+            return callback(err);
+        }
+        console.log('File uploaded successfully:', data.Location);
+        callback(null, fileUrl);
+    });
+}
+
+function uploadFiles() {
+    var tiffFile = document.getElementById('tiffFile').files[0];
+    var kmlFile = document.getElementById('kmlFile').files[0];
+
+    uploadFileToS3(tiffFile, function(err, tiffS3Path) {
+        if (err) {
+            alert('Error uploading TIFF file');
+            return;
+        }
+        
+        uploadFileToS3(kmlFile, function(err, kmlS3Path) {
+            if (err) {
+                alert('Error uploading KML file');
+                return;
+            }
+
+            processFiles(tiffS3Path, kmlS3Path);
+        });
+    });
+}
+
+function processFiles(tiffS3Path, kmlS3Path) {
+    // Call your Lambda function via API Gateway here
+    // Example:
+    $.ajax({
+        method: 'POST',
+        url: 'YOUR_API_GATEWAY_ENDPOINT',
+        data: JSON.stringify({
+            tiffS3Path: tiffS3Path,
+            kmlS3Path: kmlS3Path
+        }),
+        contentType: 'application/json',
+        success: function(response) {
+            console.log('Lambda function response:', response);
+            // Process response here
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.error('Error calling Lambda function:', textStatus, errorThrown);
+        }
+    });
+}
+</script>
+
+</body>
+</html>
