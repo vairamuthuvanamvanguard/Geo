@@ -1,0 +1,14 @@
+{
+    "dev": {
+        "app_function": "geoapp.wsgi:application",
+        "profile_name": null,
+        "project_name": "geoapp",
+        "runtime": "python3.10",
+        "s3_bucket": "geoproject1",
+        "aws_region": "ap-south-1"
+    },
+    "dev_ap_south_1": {
+        "aws_region": "ap-south-1",
+        "extends": "dev"
+    }
+}
