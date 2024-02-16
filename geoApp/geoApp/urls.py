@@ -15,6 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from shp.views import index
+from shp.views import process_geospatial_data
 from note.views import note
 from django.conf import settings
 from django.conf.urls.static import static
@@ -24,7 +25,9 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', index, name='index'),
-    path('note/', note, name='note')
+    path('note/', note, name='note'),
+    path('geospace/', process_geospatial_data, name='process_geospatial_data'),
+
 ]
 
 if settings.DEBUG:
