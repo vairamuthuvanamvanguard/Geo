@@ -41,3 +41,5 @@ def process_geospatial_data(request):
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method.'})
 
+def ndvi_view(request):
+    return render(request, 'ndvi.html')
