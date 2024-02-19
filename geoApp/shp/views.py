@@ -40,3 +40,4 @@ def process_geospatial_data(request):
         return JsonResponse({'status': 'success', 'ndvi_stats': stats})
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method.'})
+
