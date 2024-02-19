@@ -6,6 +6,8 @@ from tiff.models import Tiff
 from note.models import Note
 from django.views.decorators.csrf import csrf_exempt
 from django.core.files.storage import default_storage
+import os
+from django.conf import settings
 
 
 def index(request):
@@ -28,18 +30,31 @@ def note(request):
 @csrf_exempt
 def process_geospatial_data(request):
     if request.method == 'POST':
-        tiff_file = request.FILES['tiff_file']
-        kml_file = request.FILES['kml_file']
-        tiff_path = default_storage.save('tmp/' + tiff_file.name, tiff_file)
-        kml_path = default_storage.save('tmp/' + kml_file.name, kml_file)
-        clipped_path = 'tmp/clipped.tif'
-        ndvi_path = 'tmp/ndvi.tif'
-        clip_tiff_with_kml(tiff_path, kml_path, clipped_path)
-        cal_ndvi(clipped_path)
-        stats = ndvi_stats(ndvi_path)
-        return JsonResponse({'status': 'success', 'ndvi_stats': stats})
+        try:
+            tiff_file = request.FILES['tiff_file']
+            kml_file = request.FILES['kml_file']
+            tiff_path = default_storage.save(os.path.join('tmp', tiff_file.name), tiff_file)
+            kml_path = default_storage.save(os.path.join('tmp', kml_file.name), kml_file)
+    
+            tiff_absolute_path = os.path.join(settings.MEDIA_ROOT, tiff_path)
+            kml_absolute_path = os.path.join(settings.MEDIA_ROOT, kml_path)
+            clipped_path = os.path.join(settings.MEDIA_ROOT, 'tmp', 'clipped.tif')
+            ndvi_path = os.path.join(settings.MEDIA_ROOT, 'tmp', 'ndvi.tif')
+
+            success = clip_tiff_with_kml(tiff_absolute_path, kml_absolute_path, clipped_path)
+            if not success:
+                return JsonResponse({'status': 'error', 'message': 'Failed to process KML file.'})
+            
+            cal_ndvi(clipped_path)
+            stats = ndvi_stats(ndvi_path)
+
+            return JsonResponse({'status': 'success', 'ndvi_stats': stats})
+
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': 'An error occurred during processing: ' + str(e)})
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method.'})
+
 
 def ndvi_view(request):
     return render(request, 'ndvi.html')

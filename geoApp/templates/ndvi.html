@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>Upload TIFF and KML Files</h2>
+
+<input type="file" id="tiffFile" name="tiffFile">
+<input type="file" id="kmlFile" name="kmlFile">
+<button id="uploadBtn">Upload and Process</button>
+
+<script>
+document.getElementById('uploadBtn').addEventListener('click', uploadFiles);
+
+function uploadFiles() {
+    const tiffFile = document.getElementById('tiffFile').files[0];
+    const kmlFile = document.getElementById('kmlFile').files[0];
+
+    // Check if files are selected
+    if (!tiffFile || !kmlFile) {
+        alert("Please select both a TIFF and a KML file.");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('tiff_file', tiffFile);
+    formData.append('kml_file', kmlFile);
+    fetch('/geospace/', {
+    method: 'POST',
+    body: formData,
+})
+.then(response => response.json())
+.then(data => {
+    console.log(data);
+    alert('Upload and processing successful!');
+})
+.catch(error => {
+    console.error('There has been a problem with your fetch operation:', error);
+    alert('Error processing files');
+});
+
+}
+</script>
+
+</body>
+</html>
