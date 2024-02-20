@@ -11,6 +11,8 @@ import geopandas as gpd
 from sqlalchemy import create_engine
 from geo.Geoserver import Geoserver
 from pg.pg import Pg
+from django.db import models
+
 
 
 # Database and GeoServer initialization
@@ -52,6 +54,19 @@ class Shp(models.Model):
 
     def __str__(self):
         return self.name
+    
+
+class GeoData(models.Model):
+    kml_file_key = models.CharField(max_length=255, blank=True, null=True)
+    tiff_file_key = models.CharField(max_length=255, blank=True, null=True)
+    ndvi_file_key = models.CharField(max_length=255, blank=True, null=True)
+    stats = models.JSONField(null=True, blank=True)  # Allow null values
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+
+
+
 
 
 # #########################################################################################

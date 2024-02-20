@@ -5,28 +5,38 @@ import matplotlib.pyplot as plt
 
 
 def clip_tiff_with_kml(tiff_path, kml_path, output_path):
-    print("Opening KML file...")
+    print("Attempting to open KML file at path:", kml_path)
     driver = ogr.GetDriverByName('KML')
     kml_ds = driver.Open(kml_path)
     if kml_ds is None:
-        print(f"Failed to open KML file at path: {kml_path}")
-        return False  
+        print(f"Failed to open KML file at path: {kml_path}. Check if the file exists and is accessible.")
+        return False
 
     layer = kml_ds.GetLayer()
+    if layer is None:
+        print(f"No layer found in KML file: {kml_path}. Ensure the KML file is correctly formatted.")
+        return False
+
     feature = layer.GetNextFeature()
     geom = feature.GetGeometryRef().Clone()
+    if geom is None:
+        print(f"No geometry found in KML feature. Ensure the KML file contains valid geometries.")
+        return False
+
     print("Opening TIFF file...")
     tiff_ds = gdal.Open(tiff_path, gdal.GA_ReadOnly)
     if tiff_ds is None:
         print("Unable to open the TIFF file.")
-        return False  
+        return False
 
     print("Performing the clipping...")
     gdal.Warp(output_path, tiff_ds, format='GTiff', cutlineDSName=kml_path,
               cutlineLayer=layer.GetName(), cropToCutline=True)
     kml_ds = None
     tiff_ds = None
-    return True  
+    return True
+
+    
 
 
 
