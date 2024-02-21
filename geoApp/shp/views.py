@@ -83,16 +83,19 @@ def upload_clipped_tiff_and_create_geodata(request):
 
 
 
-def upload_file_to_s3(file_path):
+
+def upload_file_to_s3(file_obj, bucket_name, directory):
     """
-    Upload a file to S3 and return the key.
+    Upload an InMemoryUploadedFile to S3 and return the key.
     """
     s3_client = boto3.client('s3', aws_access_key_id='AKIAYS2NV5DW6WVZIGBC',
-        aws_secret_access_key='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',
-        region_name='ap-south-1')
-    file_key = 'ndvi_dir/' + file_path.split('/')[-1]
-    s3_client.upload_file(file_path, "geoproject1", file_key)
+                             aws_secret_access_key='GHlvGsib/IacZ5msTUY7C3LAquxpPsBd/13t0vTu',
+                             region_name='ap-south-1')
+    file_key = f'{directory}/{file_obj.name}'
+    s3_client.upload_fileobj(file_obj, bucket_name, file_key)
     return file_key
+
+    
 
 def process_and_store_geospatial_data(kml_path, tiff_path, ndvi_path, stats):
     """
@@ -118,24 +121,34 @@ def process_geospatial_data(request):
     if request.method == 'POST':
         try:
             kml_file = request.FILES['kml_file']
-            kml_file_key = upload_file_to_s3(kml_file)
-            tiff_absolute_path = "clipped_landsat.tif"
-            clipped_path = "clipped.tif"
-            ndvi_path = os.path.join(settings.MEDIA_ROOT, 'tmp', 'ndvi.tif')
-            success = clip_tiff_with_kml(tiff_absolute_path, kml_file, clipped_path)
+            bucket_name = "geoproject1"
+            kml_directory = "kml_files"
+            ndvi_directory = "ndvi_img"  
+            kml_file_key = upload_file_to_s3(kml_file, bucket_name, kml_directory)
+            tiff_file_key = "ndvi_dir/clipped_landsat.tif"
+            clipped_path_key = "ndvi_clip/clipped.tif"
+            success = clip_tiff_with_kml(f'/vsis3/{bucket_name}/{tiff_file_key}', f'/vsis3/{bucket_name}/{kml_file_key}', f'/vsis3/{bucket_name}/{clipped_path_key}')
             if not success:
                 return JsonResponse({'status': 'error', 'message': 'Failed to process KML file.'})
-
-            cal_ndvi(clipped_path)
-            stats = ndvi_stats(ndvi_path)
-            download_url = request.build_absolute_uri('/media/tmp/ndvi.tif')
-
+            ndvi_file_key = cal_ndvi(f'/vsis3/{bucket_name}/{clipped_path_key}', bucket_name, ndvi_directory)
+            stats = ndvi_stats(f'/vsis3/{bucket_name}/{ndvi_file_key}')
+            download_url = generate_s3_presigned_url(bucket_name, ndvi_file_key)
+            
             return JsonResponse({'status': 'success', 'ndvi_stats': stats, 'download_url': download_url})
-
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': 'An error occurred during processing: ' + str(e)})
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method.'})
+
+
+def generate_s3_presigned_url(bucket_name, object_key):
+    s3_client = boto3.client('s3')
+    url = s3_client.generate_presigned_url('get_object',
+                                           Params={'Bucket': bucket_name, 'Key': object_key},
+                                           ExpiresIn=3600)  
+    return url
+
+
 
 
 def ndvi_view(request):

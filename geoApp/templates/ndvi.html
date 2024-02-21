@@ -6,7 +6,7 @@
 
 <input type="file" id="kmlFile" name="kmlFile">
 <button id="uploadBtn">Upload and Process</button>
-<!-- <button id="uploadBtn2">Upload Tiff</button> -->
+<button id="uploadBtn2">Upload Tiff</button>
 
 <script>
 document.getElementById('uploadBtn').addEventListener('click', uploadFiles);
@@ -44,7 +44,7 @@ function uploadFiles() {
             alert('Upload and processing successful!');
             // Display stats and download link
             alert(`NDVI Stats: ${JSON.stringify(data.ndvi_stats)}`);
-            window.location.href = data.download_url; // Directly download or provide a link for downloading
+            // window.location.href = data.download_url; // Directly download or provide a link for downloading
         } else {
             alert(data.message);
         }
