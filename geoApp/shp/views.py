@@ -38,14 +38,11 @@ def upload_file_to_s32(file_path, object_name=None):
     :param object_name: S3 object name. If not specified, file_path is used
     :return: The S3 key of the uploaded file if successful, else None
     """
-    # Prepend 'ndvi_dir/' to the object name to store it in the ndvi_dir directory
     bucket_name="geoproject1"
     if object_name is None:
         object_name = 'ndvi_dir/' + file_path.split('/')[-1]
     else:
         object_name = 'ndvi_dir/' + object_name
-
-    # Upload the file
     s3_client = boto3.client(
         's3',
         aws_access_key_id='AKIAYS2NV5DW6WVZIGBC',
@@ -63,17 +60,12 @@ def upload_file_to_s32(file_path, object_name=None):
 @csrf_exempt
 def upload_clipped_tiff_and_create_geodata(request):
     if request.method == 'POST':
-        tiff_file_path = "clipped_landsat.tif"  # Adjust the path as necessary
-
-        # Upload the TIFF file to S3, specifying the directory as part of the object name
+        tiff_file_path = "clipped_landsat.tif"  
         tiff_file_key = upload_file_to_s32(tiff_file_path)
-
         if tiff_file_key:
             print("S3 upload successful, attempting to create GeoData entry...")
-            # Create a new GeoData entry with the uploaded TIFF file key
             geodata = GeoData.objects.create(
                 tiff_file_key=tiff_file_key,
-                # Initialize other fields as necessary, e.g., kml_file_key='', ndvi_file_key='', stats={}
             )
             return JsonResponse({'status': 'success', 'message': f'GeoData entry created with TIFF file key: {tiff_file_key}'})
         else:
@@ -101,12 +93,9 @@ def process_and_store_geospatial_data(kml_path, tiff_path, ndvi_path, stats):
     """
     Process geospatial data, store in S3, and save references in the database.
     """
-    # Assume TIFF and NDVI files have been generated at given paths
     kml_file_key = upload_file_to_s3(kml_path)
     tiff_file_key = upload_file_to_s3(tiff_path)
     ndvi_file_key = upload_file_to_s3(ndvi_path)
-
-    # Create a new GeoData entry with all components
     geo_data = GeoData.objects.create(
         kml_file=kml_file_key,
         tiff_file=tiff_file_key,
