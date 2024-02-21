@@ -1,25 +1,66 @@
 <!DOCTYPE html>
 <html>
-    <head>
+<head>
     <title>TIFF Display Example</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <style>
-        #map { height: 400px; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        #map {
+            height: 400px;
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #444;
+        }
+        .btn {
+            background-color: #008cba;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+            transition: background-color 0.3s ease;
+        }
+        .btn:hover {
+            background-color: #005f73;
+        }
+        input[type="file"] {
+            margin-top: 20px;
+        }
+        #ndviStats, #downloadLink {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        #downloadLink {
+            padding: 15px;
+            text-align: center;
+        }
+        #downloadLink a {
+            text-decoration: none;
+            color: white;
+        }
     </style>
 </head>
-<body>
 <body>
 
 <h2>Upload KML File</h2>
 
 <input type="file" id="kmlFile" name="kmlFile">
-<button id="uploadBtn">Upload and Process</button>
-<!-- <button id="uploadBtn2">Upload Tiff</button> -->
+<button id="uploadBtn" class="btn">Upload and Process</button>
 
 <div id="ndviStats"></div>
 <div id="downloadLink"></div>
-
 
 <script>
 document.getElementById('uploadBtn').addEventListener('click', uploadFiles);
