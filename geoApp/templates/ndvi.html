@@ -6,7 +6,11 @@
 
 <input type="file" id="kmlFile" name="kmlFile">
 <button id="uploadBtn">Upload and Process</button>
-<button id="uploadBtn2">Upload Tiff</button>
+<!-- <button id="uploadBtn2">Upload Tiff</button> -->
+
+<div id="ndviStats"></div>
+<div id="downloadLink"></div>
+
 
 <script>
 document.getElementById('uploadBtn').addEventListener('click', uploadFiles);
@@ -24,8 +28,6 @@ function uploadFiles2() {
 
 function uploadFiles() {
     const kmlFile = document.getElementById('kmlFile').files[0];
-
-    // Check if file is selected
     if (!kmlFile) {
         alert("Please select a KML file.");
         return;
@@ -33,18 +35,30 @@ function uploadFiles() {
 
     const formData = new FormData();
     formData.append('kml_file', kmlFile);
+
     fetch('/geospace', {
         method: 'POST',
         body: formData,
     })
     .then(response => response.json())
     .then(data => {
-        console.log(data);
         if (data.status === 'success') {
             alert('Upload and processing successful!');
-            // Display stats and download link
-            alert(`NDVI Stats: ${JSON.stringify(data.ndvi_stats)}`);
-            // window.location.href = data.download_url; // Directly download or provide a link for downloading
+
+            // Update NDVI stats display
+            document.getElementById('ndviStats').innerHTML = `<strong>NDVI Stats:</strong> ${JSON.stringify(data.ndvi_stats)}`;
+
+            // Create a download link/button
+            const downloadBtn = document.createElement('a');
+            downloadBtn.href = data.download_url; // Assuming `data.download_url` is the direct link to the file
+            downloadBtn.textContent = 'Download NDVI TIFF';
+            downloadBtn.className = 'btn btn-primary'; // Example if using Bootstrap
+            downloadBtn.download = ''; // Suggest the browser to download the link
+
+            // Clear any existing content and add the new download link/button
+            const downloadLinkDiv = document.getElementById('downloadLink');
+            downloadLinkDiv.innerHTML = '';
+            downloadLinkDiv.appendChild(downloadBtn);
         } else {
             alert(data.message);
         }
@@ -54,6 +68,7 @@ function uploadFiles() {
         alert('Error processing file');
     });
 }
+
 </script>
 
 </body>
