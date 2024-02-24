@@ -60,7 +60,7 @@
 <button id="uploadBtn" class="btn">Upload and Process</button>
 
 <div id="ndviStats"></div>
-<div id="downloadLink"></div>
+<!-- <div id="downloadLink"></div> -->
 
 <script>
 document.getElementById('uploadBtn').addEventListener('click', uploadFiles);
@@ -96,19 +96,7 @@ function uploadFiles() {
             alert('Upload and processing successful!');
 
             // Update NDVI stats display
-            document.getElementById('ndviStats').innerHTML = `<strong>NDVI Stats:</strong> ${JSON.stringify(data.ndvi_stats)}`;
-
-            // Create a download link/button
-            const downloadBtn = document.createElement('a');
-            downloadBtn.href = data.download_url; // Assuming `data.download_url` is the direct link to the file
-            downloadBtn.textContent = 'Download NDVI TIFF';
-            downloadBtn.className = 'btn btn-primary'; // Example if using Bootstrap
-            downloadBtn.download = ''; // Suggest the browser to download the link
-
-            // Clear any existing content and add the new download link/button
-            const downloadLinkDiv = document.getElementById('downloadLink');
-            downloadLinkDiv.innerHTML = '';
-            downloadLinkDiv.appendChild(downloadBtn);
+            document.getElementById('ndviStats').innerHTML = `<strong>NDVI Stats:</strong> ${JSON.stringify(data.ndvi_stats)} <a href="#" onclick="window.location.href='http://127.0.0.1:8000/';">Click here to view the tif file</a>`;
         } else {
             alert(data.message);
         }

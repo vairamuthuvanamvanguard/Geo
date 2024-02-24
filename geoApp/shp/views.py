@@ -9,7 +9,16 @@ from django.core.files.storage import default_storage
 import os
 from django.conf import settings
 import boto3
+from geo.Geoserver import Geoserver
+import tempfile
 
+geo = Geoserver('http://localhost:8080/geoserver', username='admin', password='geoserver')
+s3_client = boto3.client(
+    's3',
+   aws_access_key_id='AKIAYS2NV5DW6WVZIGBC',
+    aws_secret_access_key='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',
+    region_name='ap-south-1'
+)
 
 def index(request):
     shp = Shp.objects.all()
@@ -104,30 +113,97 @@ def process_and_store_geospatial_data(kml_path, tiff_path, ndvi_path, stats):
     )
     return geo_data
 
+def publish_data(sender, instance, created, **kwargs):
+    if not created:
+        return
+
+    file_key = instance.file.name
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        local_file_path = os.path.join(tmp_dir, os.path.basename(file_key))
+
+        # Download the file from S3
+        s3_client.download_file('geoproject1', file_key, local_file_path)
+
+        # Publish TIFF file to GeoServer
+        geo.create_coveragestore(local_file_path, workspace='geoapp', layer_name=instance.name)
+        geo.create_coveragestyle(local_file_path, style_name=instance.name, workspace='geoapp')
+        geo.publish_style(layer_name=instance.name, style_name=instance.name, workspace='geoapp')
+
+
+def publish_tiff_to_geoserver(tiff_instance, file_key, workspace, layer_name):
+    """
+    Downloads a TIFF file from S3, publishes it to GeoServer, and updates the Tiff model instance.
+
+    :param tiff_instance: The Tiff model instance to update with publication details.
+    :param file_key: The S3 key of the TIFF file.
+    :param workspace: The GeoServer workspace to publish the layer in.
+    :param layer_name: The name of the layer to be created in GeoServer.
+    :return: True if the publication was successful, False otherwise.
+    """
+    try:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            local_file_path = os.path.join(tmp_dir, os.path.basename(file_key))
+            s3_client.download_file("geoproject1", file_key, local_file_path)
+
+            if geo.create_coveragestore(local_file_path, workspace=workspace, layer_name=layer_name) and \
+               geo.create_coveragestyle(local_file_path, style_name=layer_name, workspace=workspace) and \
+               geo.publish_style(layer_name=layer_name, style_name=layer_name, workspace=workspace):
+                
+                tiff_instance.is_published_to_geoserver = True
+                tiff_instance.geoserver_workspace = workspace
+                tiff_instance.geoserver_layer_name = layer_name
+                tiff_instance.save()
+                print("published to geoserver")
+
+                return True
+            else:
+                print("Failed to publish to GeoServer.")
+                return False
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return False
+
+
 
 @csrf_exempt
 def process_geospatial_data(request):
-    if request.method == 'POST':
-        try:
-            kml_file = request.FILES['kml_file']
-            bucket_name = "geoproject1"
-            kml_directory = "kml_files"
-            ndvi_directory = "ndvi_img"  
-            kml_file_key = upload_file_to_s3(kml_file, bucket_name, kml_directory)
-            tiff_file_key = "ndvi_dir/clipped_landsat.tif"
-            clipped_path_key = "ndvi_clip/clipped.tif"
-            success = clip_tiff_with_kml(f'/vsis3/{bucket_name}/{tiff_file_key}', f'/vsis3/{bucket_name}/{kml_file_key}', f'/vsis3/{bucket_name}/{clipped_path_key}')
-            if not success:
-                return JsonResponse({'status': 'error', 'message': 'Failed to process KML file.'})
-            ndvi_file_key = cal_ndvi(f'/vsis3/{bucket_name}/{clipped_path_key}', bucket_name, ndvi_directory)
-            stats = ndvi_stats(f'/vsis3/{bucket_name}/{ndvi_file_key}')
-            download_url = generate_s3_presigned_url(bucket_name, ndvi_file_key)
-            
-            return JsonResponse({'status': 'success', 'ndvi_stats': stats, 'download_url': download_url})
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': 'An error occurred during processing: ' + str(e)})
-    else:
-        return JsonResponse({'status': 'error', 'message': 'Invalid request method.'})
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
+
+    try:
+        kml_file = request.FILES.get('kml_file')
+        if not kml_file:
+            return JsonResponse({'status': 'error', 'message': 'No KML file provided.'}, status=400)
+
+        bucket_name = "geoproject1"
+        kml_file_key = upload_file_to_s3(kml_file, bucket_name, "kml_files")
+        tiff_file_key = "ndvi_dir/clipped_landsat.tif"
+        clipped_path_key = "ndvi_clip/clipped.tif"
+
+        if not clip_tiff_with_kml(f'/vsis3/{bucket_name}/{tiff_file_key}', f'/vsis3/{bucket_name}/{kml_file_key}', f'/vsis3/{bucket_name}/{clipped_path_key}'):
+            return JsonResponse({'status': 'error', 'message': 'Failed to process KML file.'}, status=500)
+
+        ndvi_file_key = cal_ndvi(f'/vsis3/{bucket_name}/{clipped_path_key}', bucket_name, "ndvi_img")
+        tiff_instance = Tiff.objects.create(
+            name='ndvi_img',
+            description='Description of what the TIFF represents',
+            file=ndvi_file_key  # Adjust based on your actual file handling
+        )
+
+        stats = ndvi_stats(f'/vsis3/{bucket_name}/{ndvi_file_key}')
+        download_url = generate_s3_presigned_url(bucket_name, ndvi_file_key)
+
+        # Assuming `publish_tiff_to_geoserver` wraps the GeoServer publishing logic
+        if publish_tiff_to_geoserver(tiff_instance, ndvi_file_key, 'geoapp', 'ndvi_layer'):
+            # Handle success
+            return JsonResponse({'status': 'success', 'message': 'TIFF published to GeoServer.','ndvi_stats': stats,})
+        else:
+            # Handle failure
+            return JsonResponse({'status': 'error', 'message': 'Failed to publish TIFF to GeoServer.'}, status=500)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': f'An error occurred during processing: {str(e)}'}, status=500)
+
 
 
 def generate_s3_presigned_url(bucket_name, object_key):

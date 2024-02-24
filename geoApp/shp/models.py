@@ -17,8 +17,8 @@ from django.db import models
 
 # Database and GeoServer initialization
 
-geo = Geoserver('http://13.201.54.187:8080/geoserver', username='admin', password='Skyblue@1002')
-conn_str = 'postgresql://postgres:muthu12345@database-1.cla06cywkakj.ap-south-1.rds.amazonaws.com'
+geo = Geoserver('http://localhost:8080/geoserver', username='admin', password='geoserver')
+conn_str = 'postgresql://postgres:muthu12345@localhost'
 
 
 s3_client = boto3.client(
@@ -29,7 +29,7 @@ s3_client = boto3.client(
 )
 
 db = Pg(dbname='geoapp', user='postgres',
-        password='muthu12345', host='database-1.cla06cywkakj.ap-south-1.rds.amazonaws.com', port='5432')
+        password='muthu12345', host='localhost', port='5432')
 
 
 ####################################################################################
@@ -37,9 +37,9 @@ db = Pg(dbname='geoapp', user='postgres',
 ####################################################################################
 # initializing the library
 
-geo = Geoserver('http://15.206.186.153:8080/geoserver', username='admin', password='Skyblue@1002')
+geo = Geoserver('http://15.206.186.153:8080/geoserver', username='admin', password='geoserver')
 # Database connection string (postgresql://${database_user}:${databse_password}@${database_host}:${database_port}/${database_name}
-conn_str = 'postgresql://postgres:muthu12345@database-1.cla06cywkakj.ap-south-1.rds.amazonaws.com:5432/geoapp'
+conn_str = 'postgresql://postgres:muthu12345@localhost:5432/geoapp'
 
 
 ######################################################################################
@@ -78,17 +78,18 @@ def publish_data(sender, instance, created, **kwargs):
         return
 
     file_key = instance.file.name
+    bucket_name = 'geoproject1'  # Update with your actual bucket name
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         local_file_path = os.path.join(tmp_dir, os.path.basename(file_key))
 
         # Download the file from S3
-        s3_client.download_file('geoproject1', file_key, local_file_path)
+        s3_client.download_file(bucket_name, file_key, local_file_path)
 
         # Extract the zipfile
         with zipfile.ZipFile(local_file_path, 'r') as zip_ref:
             zip_ref.extractall(tmp_dir)
-        
+
         # Find .shp file in the extracted files
         shp_files = glob.glob(f'{tmp_dir}/**/*.shp', recursive=True)
         if not shp_files:
@@ -96,18 +97,22 @@ def publish_data(sender, instance, created, **kwargs):
 
         req_shp = shp_files[0]
         gdf = gpd.read_file(req_shp)  # Make GeoDataFrame
+
+        # Update `conn_str` with your actual database connection string
+        conn_str = 'postgresql://postgres:muthu12345@localhost:5432/geoapp'
         engine = create_engine(conn_str)
 
         # Write GeoDataFrame to PostGIS
-        gdf.to_postgis(con=engine, schema='data', name=instance.name, if_exists="replace")
+        gdf.to_postgis(name=instance.name, con=engine, schema='data', if_exists="replace")
 
-        # Publish .shp to the geoserver
+        # Publish .shp to the GeoServer
         geo.create_featurestore(store_name='geoApp', workspace='geoapp', db='geoapp',
-                                host='database-1.cla06cywkakj.ap-south-1.rds.amazonaws.com', 
-                                pg_user='postgres', pg_password='muthu12345', schema='data')
+                                host='localhost', 
+                                pg_user='postgres', pg_password='muthu12345', schema='data')  # Adjusted 'schema' to 'public'
         geo.publish_featurestore(workspace='geoapp', store_name='geoApp', pg_table=instance.name)
         geo.create_outline_featurestyle('geoApp_shp', workspace='geoapp')
         geo.publish_style(layer_name=instance.name, style_name='geoApp_shp', workspace='geoapp')
+
 
 
 
