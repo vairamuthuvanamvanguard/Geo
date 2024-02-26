@@ -17,7 +17,7 @@ from django.db import models
 
 # Database and GeoServer initialization
 
-geo = Geoserver('http://localhost:8080/geoserver', username='admin', password='geoserver')
+geo = Geoserver('http://localhost:8080/geoserver', username='admin', password='Skyblue@1002')
 conn_str = 'postgresql://postgres:muthu12345@localhost'
 
 
@@ -37,7 +37,7 @@ db = Pg(dbname='geoapp', user='postgres',
 ####################################################################################
 # initializing the library
 
-geo = Geoserver('http://15.206.186.153:8080/geoserver', username='admin', password='geoserver')
+geo = Geoserver('http://15.206.186.153:8080/geoserver', username='admin', password='Skyblue@1002')
 # Database connection string (postgresql://${database_user}:${databse_password}@${database_host}:${database_port}/${database_name}
 conn_str = 'postgresql://postgres:muthu12345@localhost:5432/geoapp'
 

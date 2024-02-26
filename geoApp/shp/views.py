@@ -12,7 +12,7 @@ import boto3
 from geo.Geoserver import Geoserver
 import tempfile
 
-geo = Geoserver('http://localhost:8080/geoserver', username='admin', password='geoserver')
+geo = Geoserver('http://localhost:8080/geoserver', username='admin', password='Skyblue@1002')
 s3_client = boto3.client(
     's3',
    aws_access_key_id='AKIAYS2NV5DW6WVZIGBC',
