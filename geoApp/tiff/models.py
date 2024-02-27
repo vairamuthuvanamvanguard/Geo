@@ -23,7 +23,7 @@ s3_client = boto3.client(
 )
 
 # Initialize GeoServer
-geo = Geoserver('http://localhost:8080/geoserver', username='admin', password='Skyblue@1002')
+geo = Geoserver('http://172.30.139.139:8080/geoserver', username='admin', password='Skyblue@1002')
 
 # TIFF Model
 class Tiff(models.Model):
@@ -54,11 +54,7 @@ def publish_data(sender, instance, created, **kwargs):
         geo.create_coveragestyle(local_file_path, style_name=instance.name, workspace='geoapp')
         geo.publish_style(layer_name=instance.name, style_name=instance.name, workspace='geoapp')
 
-# Post-delete Signal for Tiff
+
 @receiver(post_delete, sender=Tiff)
 def delete_data(sender, instance, **kwargs):
-    # Delete the file from S3
-    # s3_client.delete_object(Bucket='geoproject1', Key=instance.file.name)
-
-    # Delete layer from GeoServer
     geo.delete_layer(instance.name, 'geoapp')

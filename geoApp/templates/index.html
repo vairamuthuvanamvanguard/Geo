@@ -164,6 +164,7 @@
 <script src="{% static './dist/web-GIS.js' %}"></script>
 
 <script>
+  
     $(".leaflet-prevent").on("click", L.DomEvent.stopPropagation);
   var mapPinToggler =true;
   $('.pin').on('click', function(){
@@ -211,7 +212,7 @@
 
   {% for s in shp %}
 
-  var {{ s.name}} = L.tileLayer.wms('http://localhost:8080/geoserver/wms', {
+  var {{ s.name}} = L.tileLayer.wms('http://172.30.139.139:8080/geoserver/wms', {
     layers: '{{s.name}}',
     transparent: true,
     format: 'image/png',
@@ -223,7 +224,7 @@
 
   //Tiff was
   {% for t in tiff %}
-      var {{ t.name }} = L.tileLayer.wms('http://localhost:8080/geoserver/wms', {
+      var {{ t.name }} = L.tileLayer.wms('http://172.30.139.139:8080/geoserver/wms', {
           layers: '{{t.name}}',
           transparent: true,
           format: 'image/png',
