@@ -229,9 +229,10 @@
           transparent: true,
           format: 'image/png',
       })
-
       overlayMaps['{{ t.name }}'] = {{ t.name }}
 
       {% endfor %}
+
+      
   L.control.layers(baseMaps, overlayMaps, { collapsed: false, position: 'topleft' }).addTo(map);
 </script>
