@@ -188,13 +188,11 @@ def process_geospatial_data(request):
         tiff_instance = Tiff.objects.create(
             name='ndvi_img',
             description='Description of what the TIFF represents',
-            file=ndvi_file_key  # Adjust based on your actual file handling
+            file=ndvi_file_key  
         )
 
         stats = ndvi_stats(f'/vsis3/{bucket_name}/{ndvi_file_key}')
         download_url = generate_s3_presigned_url(bucket_name, ndvi_file_key)
-
-        # Assuming `publish_tiff_to_geoserver` wraps the GeoServer publishing logic
         if publish_tiff_to_geoserver(tiff_instance, ndvi_file_key, 'geoapp', 'ndvi_layer'):
             # Handle success
             return JsonResponse({'status': 'success', 'message': 'TIFF published to GeoServer.','ndvi_stats': stats,})
