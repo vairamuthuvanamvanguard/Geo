@@ -230,18 +230,14 @@
 
 var zoomState = {};
 
-// Custom function to add layers to the map with click events to zoom in and out
 function addLayerWithZoom(layerName, layer) {
   layer.on('add', function() {
-    // Check if the layer is already zoomed in
     if (zoomState[layerName]) {
-      // If so, zoom out to the default view or a specified bounds
-      map.setView([20.5937, 78.9629], 5); // 5 is an example zoom level, adjust
-      zoomState[layerName] = false; // Reset the zoom state for this layer
+      map.setView([20.5937, 78.9629], 5);
+      zoomState[layerName] = false;
     } else {
-      // If not zoomed in, then zoom to its bounds
       zoomToLayerBounds(layerName);
-      zoomState[layerName] = true; // Set the zoom state to true
+      zoomState[layerName] = true; 
     }
   });
   return layer;
