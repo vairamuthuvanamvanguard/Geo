@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from .processing import clip_tiff_with_kml, cal_ndvi, ndvi_stats
 from .models import Shp, GeoData
-from tiff.models import Tiff
+from tiff.models import Tiff, GeoPoint, TiffLayer
 from note.models import Note
 from django.views.decorators.csrf import csrf_exempt
 from django.core.files.storage import default_storage
@@ -10,7 +10,21 @@ import os
 from django.conf import settings
 import boto3
 from geo.Geoserver import Geoserver
+from django.core.exceptions import ObjectDoesNotExist
 import tempfile
+from django.utils import timezone
+
+
+def data_api(request):
+    shp_data = list(Shp.objects.values())  # Assuming your model has fields that can be directly serialized
+    tiff_data = list(Tiff.objects.values())
+    note_data = list(Note.objects.values('lat', 'lng', 'note_heading', 'note'))  # Example fields
+
+    return JsonResponse({
+        'shp': shp_data,
+        'tiff': tiff_data,
+        'note': note_data,
+    })
 
 geo = Geoserver('http://172.30.139.139:8080/geoserver', username='admin', password='Skyblue@1002')
 s3_client = boto3.client(
@@ -25,6 +39,15 @@ def index(request):
     tiff = Tiff.objects.all()
     note = Note.objects.all()
     return render(request, 'index.html', {'shp': shp, 'tiff': tiff, 'note': note})
+
+
+
+
+def ndvi_view(request):
+    shp = Shp.objects.all()
+    tiff = Tiff.objects.all()
+    note = Note.objects.all()
+    return render(request, 'ndvi.html', {'shp': shp, 'tiff': tiff, 'note': note})
 
 
 def note(request):
@@ -82,9 +105,6 @@ def upload_clipped_tiff_and_create_geodata(request):
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method.'})
 
-
-
-
 def upload_file_to_s3(file_obj, bucket_name, directory):
     """
     Upload an InMemoryUploadedFile to S3 and return the key.
@@ -96,7 +116,6 @@ def upload_file_to_s3(file_obj, bucket_name, directory):
     s3_client.upload_fileobj(file_obj, bucket_name, file_key)
     return file_key
 
-    
 
 def process_and_store_geospatial_data(kml_path, tiff_path, ndvi_path, stats):
     """
@@ -165,6 +184,21 @@ def publish_tiff_to_geoserver(tiff_instance, file_key, workspace, layer_name):
         return False
 
 
+def get_tiff_layer_points(request, layer_name):
+    try:
+        tiff_layers = TiffLayer.objects.filter(name=layer_name)
+        if not tiff_layers.exists():
+            return JsonResponse({'status': 'error', 'message': 'Tiff layer not found'}, status=404)
+
+        points_list = []
+        for tiff_layer in tiff_layers:
+            points = tiff_layer.points.values('latitude', 'longitude')
+            points_list.extend(list(points))
+
+        return JsonResponse(points_list, safe=False)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
 
 @csrf_exempt
 def process_geospatial_data(request):
@@ -180,8 +214,13 @@ def process_geospatial_data(request):
         kml_file_key = upload_file_to_s3(kml_file, bucket_name, "kml_files")
         tiff_file_key = "ndvi_dir/clipped_landsat.tif"
         clipped_path_key = "ndvi_clip/clipped.tif"
+        tiff_instance1 = TiffLayer.objects.create(
+            name='ndvi_img',
+            description='The original Landsat image before clipping.',
+            file_key=f'{bucket_name}/{kml_file_key}',  
+        )
 
-        if not clip_tiff_with_kml(f'/vsis3/{bucket_name}/{tiff_file_key}', f'/vsis3/{bucket_name}/{kml_file_key}', f'/vsis3/{bucket_name}/{clipped_path_key}'):
+        if not clip_tiff_with_kml(tiff_instance1, f'/vsis3/{bucket_name}/{tiff_file_key}', f'/vsis3/{bucket_name}/{kml_file_key}', f'/vsis3/{bucket_name}/{clipped_path_key}'):
             return JsonResponse({'status': 'error', 'message': 'Failed to process KML file.'}, status=500)
 
         ndvi_file_key = cal_ndvi(f'/vsis3/{bucket_name}/{clipped_path_key}', bucket_name, "ndvi_img")
@@ -212,7 +251,3 @@ def generate_s3_presigned_url(bucket_name, object_key):
     return url
 
 
-
-
-def ndvi_view(request):
-    return render(request, 'ndvi.html')

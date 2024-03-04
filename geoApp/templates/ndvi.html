@@ -1,113 +1,336 @@
+{% load static %}
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>NDVI Stats</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+    <link rel="stylesheet" href="{% static './lib/leaflet-measure.css' %}" />
+    <link rel="stylesheet" href="{% static './lib/MarkerCluster.css' %}" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{% static './lib/MarkerCluster.Default.css' %}"
+    />
+    <link rel="stylesheet" href="{% static './dist/style.css' %}" />
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            padding: 0;
-            background-color: #f4f4f4;
-            color: #333;
-        }
-        #map {
-            height: 400px;
-            margin-bottom: 20px;
-        }
-        h2 {
-            color: #444;
-        }
-        .btn {
-            background-color: #008cba;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            margin-top: 10px;
-            transition: background-color 0.3s ease;
-        }
-        .btn:hover {
-            background-color: #005f73;
-        }
-        input[type="file"] {
-            margin-top: 20px;
-        }
-        #ndviStats, #downloadLink {
-            margin-top: 20px;
-            padding: 10px;
-            background-color: #fff;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        #downloadLink {
-            padding: 15px;
-            text-align: center;
-        }
-        #downloadLink a {
-            text-decoration: none;
-            color: white;
-        }
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        padding: 0;
+        background-color: #f4f4f4;
+        color: #333;
+      }
+      #map {
+        height: 430px;
+        margin-top: 20px;
+        display: none; 
+      }
+      h2 {
+        color: #444;
+      }
+      .btn {
+        background-color: #008cba;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        margin-top: 10px;
+        transition: background-color 0.3s ease;
+      }
+      .btn:hover {
+        background-color: #005f73;
+      }
+      input[type="file"] {
+        margin-top: 20px;
+      }
+      #ndviStats,
+      #downloadLink {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #fff;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      #downloadLink {
+        padding: 15px;
+        text-align: center;
+      }
+      #downloadLink a {
+        text-decoration: none;
+        color: white;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
+    <h2>Upload KML File</h2>
 
-<h2>Upload KML File</h2>
+    <input type="file" id="kmlFile" name="kmlFile" />
+    <button id="uploadBtn" class="btn">Upload and Process</button>
 
-<input type="file" id="kmlFile" name="kmlFile">
-<button id="uploadBtn" class="btn">Upload and Process</button>
+    <div id="ndviStats"></div>
+    <div id="map">
+      <!-- Map coordinate  -->
+      <div class="leaflet-control map-coordinate">
+        <div class="coordinate"></div>
+      </div>
 
-<div id="ndviStats"></div>
-<!-- <div id="downloadLink"></div> -->
+      <!-- full browser  -->
+      <div class="leaflet-control full-screen" onclick="fullScreenView()">
+        <svg
+          width="1.5em"
+          height="1.5em"
+          viewBox="0 0 16 16"
+          class="bi bi-arrows-fullscreen"
+          fill="currentColor"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M5.828 10.172a.5.5 0 0 0-.707 0l-4.096 4.096V11.5a.5.5 0 0 0-1 0v3.975a.5.5 0 0 0 .5.5H4.5a.5.5 0 0 0 0-1H1.732l4.096-4.096a.5.5 0 0 0 0-.707zm4.344 0a.5.5 0 0 1 .707 0l4.096 4.096V11.5a.5.5 0 1 1 1 0v3.975a.5.5 0 0 1-.5.5H11.5a.5.5 0 0 1 0-1h2.768l-4.096-4.096a.5.5 0 0 1 0-.707zm0-4.344a.5.5 0 0 0 .707 0l4.096-4.096V4.5a.5.5 0 1 0 1 0V.525a.5.5 0 0 0-.5-.5H11.5a.5.5 0 0 0 0 1h2.768l-4.096 4.096a.5.5 0 0 0 0 .707zm-4.344 0a.5.5 0 0 1-.707 0L1.025 1.732V4.5a.5.5 0 0 1-1 0V.525a.5.5 0 0 1 .5-.5H4.5a.5.5 0 0 1 0 1H1.732l4.096 4.096a.5.5 0 0 1 0 .707z"
+          />
+        </svg>
+      </div>
 
-<script>
-document.getElementById('uploadBtn').addEventListener('click', uploadFiles);
-document.getElementById('uploadBtn2').addEventListener('click', uploadFiles2);
-function uploadFiles2() {
-    
-    fetch('/tiffupload', {
-        method: 'POST',
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log("Success");  
-    })
-}
+      <!-- zoom to layer  -->
+      <div
+        class="leaflet-control zoom-to-layer"
+        style="
+          position: absolute;
+          background-color: #fff;
+          padding: 7px;
+          right: 10px;
+          top: 270px;
+        "
+      >
+        <svg
+          width="1.5em"
+          height="1.5em"
+          viewBox="0 0 16 16"
+          class="bi bi-house-door"
+          fill="currentColor"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M7.646 1.146a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 .146.354v7a.5.5 0 0 1-.5.5H9.5a.5.5 0 0 1-.5-.5v-4H7v4a.5.5 0 0 1-.5.5H2a.5.5 0 0 1-.5-.5v-7a.5.5 0 0 1 .146-.354l6-6zM2.5 7.707V14H6v-4a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5v4h3.5V7.707L8 2.207l-5.5 5.5z"
+          />
+          <path
+            fill-rule="evenodd"
+            d="M13 2.5V6l-2-2V2.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5z"
+          />
+        </svg>
+      </div>
 
-function uploadFiles() {
-    const kmlFile = document.getElementById('kmlFile').files[0];
-    if (!kmlFile) {
-        alert("Please select a KML file.");
-        return;
-    }
+      <div
+        class="leaflet-control pin leaflet-prevent"
+        style="
+          position: absolute;
+          background-color: #fff;
+          padding: 7px;
+          right: 10px;
+          top: 320px;
+        "
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="1.5em"
+          height="1.5em"
+          fill="currentColor"
+          class="bi bi-pin-angle-fill"
+          viewBox="0 0 16 16"
+        >
+          <path
+            d="M9.828.722a.5.5 0 0 1 .354.146l4.95 4.95a.5.5 0 0 1 0 .707c-.48.48-1.072.588-1.503.588-.177 0-.335-.018-.46-.039l-3.134 3.134a5.927 5.927 0 0 1 .16 1.013c.046.702-.032 1.687-.72 2.375a.5.5 0 0 1-.707 0l-2.829-2.828-3.182 3.182c-.195.195-1.219.902-1.414.707-.195-.195.512-1.22.707-1.414l3.182-3.182-2.828-2.829a.5.5 0 0 1 0-.707c.688-.688 1.673-.767 2.375-.72a5.92 5.92 0 0 1 1.013.16l3.134-3.133a2.772 2.772 0 0 1-.04-.461c0-.43.108-1.022.589-1.503a.5.5 0 0 1 .353-.146z"
+          />
+        </svg>
+      </div>
+    </div>
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+      integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script src="{% static './lib/leaflet.browser.print.min.js' %}"></script>
+    <script src="{% static './lib/leaflet-measure.js' %}"></script>
+    <script src="{% static './lib/leaflet.markercluster.js' %}"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    <script src="{% static './data/test.js' %}"></script>
+    <script src="{% static './dist/main.js' %}"></script>
+    <script src="{% static './dist/web-GIS.js' %}"></script>
 
-    const formData = new FormData();
-    formData.append('kml_file', kmlFile);
+    <script>
+      document.getElementById('uploadBtn').addEventListener('click', uploadFiles);
+      document.getElementById('uploadBtn2').addEventListener('click', uploadFiles2);
+      function uploadFiles2() {
+        fetch("/tiffupload", {
+          method: "POST",
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log("Success");
+          });
+      }
 
-    fetch('/geospace', {
-        method: 'POST',
-        body: formData,
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'success') {
-            alert('Upload and processing successful!');
+      function uploadFiles() {
+          const kmlFile = document.getElementById('kmlFile').files[0];
+          if (!kmlFile) {
+              alert("Please select a KML file.");
+              return;
+          }
 
-            // Update NDVI stats display
-            document.getElementById('ndviStats').innerHTML = `<strong>NDVI Stats:</strong> ${JSON.stringify(data.ndvi_stats)} <a href="#" onclick="window.location.href='http://127.0.0.1:8000/';">Click here to view the tif file</a>`;
-        } else {
-            alert(data.message);
-        }
-    })
-    .catch(error => {
-        console.error('There has been a problem with your fetch operation:', error);
-        alert('Error processing file');
-    });
-}
+          const formData = new FormData();
+          formData.append('kml_file', kmlFile);
 
-</script>
+          fetch('/geospace', {
+              method: 'POST',
+              body: formData,
+          })
+          .then(response => response.json())
+          .then(data => {
+              if (data.status === 'success') {
+                  alert('Upload and processing successful!');
+                  document.getElementById('ndviStats').innerHTML = `<strong>NDVI Stats:</strong> ${JSON.stringify(data.ndvi_stats)} `;
+                  showMap();
 
-</body>
+              } else {
+                  alert(data.message);
+              }
+          })
+          .catch(error => {
+              console.error('There has been a problem with your fetch operation:', error);
+              alert('Error processing file');
+          });
+      }
+      function showMap() {
+        document.getElementById('map').style.display = 'block';
+        $(".leaflet-prevent").on("click", L.DomEvent.stopPropagation);
+        var overlayMaps = {};
+        var baseMaps = {};
+        fetch("/api/data/")
+          .then((response) => response.json())
+          .then((data) => {
+            console.log("Hello", data);
+            var markerGroup = L.featureGroup();
+            // data.note.forEach(function (note) {
+            //   L.marker([note.lat, note.lng])
+            //     .bindPopup(`<h3>${note.note_heading}</h3><p>${note.note}</p>`)
+            //     .addTo(markerGroup);
+            // });
+            // overlayMaps["Notes"] = markerGroup;
+            markerGroup.addTo(map);
+            data.shp.forEach(function (s) {
+              var layer = L.tileLayer.wms(
+                "http://172.30.139.139:8080/geoserver/wms",
+                {
+                  layers: s.name,
+                  transparent: true,
+                  format: "image/png",
+                }
+              );
+              overlayMaps[s.name] = layer;
+            });
+            data.tiff.forEach(function (t) {
+              var layer = addLayerWithZoom(
+                t.name,
+                L.tileLayer.wms("http://172.30.139.139:8080/geoserver/wms", {
+                  layers: t.name,
+                  transparent: true,
+                  format: "image/png",
+                })
+              );
+              overlayMaps[t.name] = layer;
+            });
+            L.control
+              .layers(baseMaps, overlayMaps, {
+                collapsed: false,
+                position: "topleft",
+              })
+              .addTo(map);
+          })
+          .catch((error) =>
+            console.error("Error fetching the map data:", error)
+          );
+        // var mapPinToggler = true;
+        // $(".pin").on("click", function () {
+        //   if (mapPinToggler) {
+        //     var lat = e.latlng.lat;
+        //     var lng = e.latlng.lng;
+        //     var popup = `<form action="{% url 'note' %}" method="POST">
+        //     {% csrf_token %}
+        //     <div class="form-group">
+        //       <label for="note heading">Note heading</label>
+        //       <input type="text" name='note_heading' class="form-control" placeholder="Enter note heading">
+        //     </div>
+        //     <input type="hidden" name="lat" value="${lat}">
+        //     <input type="hidden" name="lng" value ="${lng}">
+        //     <div class="form-group">
+        //       <label for="note">Note</label>
+        //       <textarea class='form-control' name="note_des" >Enter note here</textarea>
+        //     </div>
+        //     <button type="submit" style="margin-top:4px;" class="btn btn-primary">Submit</button>
+        //   </form>`;
+        //     var marker = L.marker([e.latlng.lat, e.latlng.lng]).bindPopup(
+        //       popup
+        //     );
+        //     marker.addTo(map);
+        //     mapPinToggler = !mapPinToggler;
+        //   } else {
+        //     map.off("click");
+        //   }
+        // });
+        L.control
+          .layers(baseMaps, overlayMaps, {
+            collapsed: false,
+            position: "topleft",
+          })
+          .addTo(map);
+      }
+
+      function addLayerWithZoom(layerName, layer) {
+        layer.on("add", function () {
+          zoomToLayerBounds(layerName);
+        });
+        return layer;
+      }
+
+      function zoomToLayerBounds(layerName) {
+        fetch(`/api/tiff-layer/${encodeURIComponent(layerName)}/points/`)
+          .then((response) => response.json())
+          .then((points) => {
+            if (points.length > 0) {
+              let bounds = L.latLngBounds(
+                points.map((point) => [point.latitude, point.longitude])
+              );
+              map.fitBounds(bounds);
+            } else {
+              console.log("No points found for layer:", layerName);
+            }
+          })
+          .catch((error) =>
+            console.error("Error fetching layer points:", error)
+          );
+      }
+    </script>
+  </body>
 </html>

@@ -164,94 +164,103 @@
 <script src="{% static './dist/web-GIS.js' %}"></script>
 
 <script>
-  
     $(".leaflet-prevent").on("click", L.DomEvent.stopPropagation);
-  var mapPinToggler =true;
-  function zoomToLayerExtent(layerName) {
-    var url = `http://172.30.139.139:8080/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=ne:chennaitiff&outputFormat=application/json`;
-    console.log("url", url);
-    fetch(url)
-        .then(response => response.json()) // Correctly return the promise from response.json()
-        .then(data => {
-            console.log("data", data);
-            if (data.features && data.features.length > 0) {
-                var bounds = L.geoJSON(data).getBounds();
-                map.fitBounds(bounds);
-            }
+    var mapPinToggler =true;
+    $('.pin').on('click', function(){
+        if(mapPinToggler){
+        map.on('click', function(e){
+            var lat = e.latlng.lat;
+            var lng = e.latlng.lng;
+            var popup = `<form action="{% url 'note' %}" method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+              <label for="note heading">Note heading</label>
+              <input type="text" name='note_heading' class="form-control" placeholder="Enter note heading">
+            </div>
+
+            <input type="hidden" name="lat" value="${lat}">
+            <input type="hidden" name="lng" value ="${lng}">
+
+            <div class="form-group">
+              <label for="note">Note</label>
+              <textarea class='form-control' name="note_des" >Enter note here</textarea>
+            </div>
+            <button type="submit" style="margin-top:4px;" class="btn btn-primary">Submit</button>
+          </form>`;
+            var marker = L.marker([e.latlng.lat, e.latlng.lng]).bindPopup(popup);
+            marker.addTo(map)
         })
-        .catch(error => console.error('Error fetching layer bounds:', error));
+        mapPinToggler = !mapPinToggler;
+    }else {
+        map.off('click')
+    }
+    })
+        var markerGroup = new L.featureGroup()
+        {% for n in note %}
+            var lat = {{n.lat}}
+            var lng = {{n.lng}}
+            var marker = L.marker([lat, lng]).bindPopup(`<h3>{{n.note_heading}}</h3><p>{{n.note}}</p>`)
+            marker.addTo(markerGroup)
+        {% endfor %}
+        var overlayMaps = {
+            'Notes': markerGroup
+        };
+    {% for s in shp %}
+    var {{ s.name}} = L.tileLayer.wms('http://172.30.139.139:8080/geoserver/wms', {
+      layers: '{{s.name}}',
+      transparent: true,
+      format: 'image/png',
+    })
+    overlayMaps['{{ s.name }}'] = {{ s.name }}
+    {% endfor %}
+
+    function zoomToLayerBounds(layerName) {
+  fetch(`/api/tiff-layer/${encodeURIComponent(layerName)}/points/`)
+    .then(response => response.json())
+    .then(points => {
+      if (points.length > 0) {
+        let bounds = L.latLngBounds(points.map(point => [point.latitude, point.longitude]));
+        map.fitBounds(bounds);
+      } else {
+        console.log("No points found for layer:", layerName);
+      }
+    })
+    .catch(error => console.error('Error fetching layer points:', error));
+}
+
+var zoomState = {};
+
+// Custom function to add layers to the map with click events to zoom in and out
+function addLayerWithZoom(layerName, layer) {
+  layer.on('add', function() {
+    // Check if the layer is already zoomed in
+    if (zoomState[layerName]) {
+      // If so, zoom out to the default view or a specified bounds
+      map.setView([20.5937, 78.9629], 5); // 5 is an example zoom level, adjust
+      zoomState[layerName] = false; // Reset the zoom state for this layer
+    } else {
+      // If not zoomed in, then zoom to its bounds
+      zoomToLayerBounds(layerName);
+      zoomState[layerName] = true; // Set the zoom state to true
+    }
+  });
+  return layer;
 }
 
 
-  $('.pin').on('click', function(){
-      if(mapPinToggler){
-      map.on('click', function(e){
-          var lat = e.latlng.lat;
-          var lng = e.latlng.lng;
-          var popup = `<form action="{% url 'note' %}" method="POST">
-          {% csrf_token %}
-          <div class="form-group">
-            <label for="note heading">Note heading</label>
-            <input type="text" name='note_heading' class="form-control" placeholder="Enter note heading">
-          </div>
-
-          <input type="hidden" name="lat" value="${lat}">
-          <input type="hidden" name="lng" value ="${lng}">
-
-          <div class="form-group">
-            <label for="note">Note</label>
-            <textarea class='form-control' name="note_des" >Enter note here</textarea>
-          </div>
-          <button type="submit" style="margin-top:4px;" class="btn btn-primary">Submit</button>
-        </form>`;
-          var marker = L.marker([e.latlng.lat, e.latlng.lng]).bindPopup(popup);
-          marker.addTo(map)
-      })
-      mapPinToggler = !mapPinToggler;
-  }else {
-      map.off('click')
-  }
-  })
-      var markerGroup = new L.featureGroup()
-
-      {% for n in note %}
-          var lat = {{n.lat}}
-          var lng = {{n.lng}}
-          var marker = L.marker([lat, lng]).bindPopup(`<h3>{{n.note_heading}}</h3><p>{{n.note}}</p>`)
-          marker.addTo(markerGroup)
-      {% endfor %}
-
-
-      var overlayMaps = {
-          'Notes': markerGroup
-      };
-
-  {% for s in shp %}
-
-  var {{ s.name}} = L.tileLayer.wms('http://172.30.139.139:8080/geoserver/wms', {
-    layers: '{{s.name}}',
-    transparent: true,
-    format: 'image/png',
-  })
-
-  overlayMaps['{{ s.name }}'] = {{ s.name }}
-
-  {% endfor %}
-
-  //Tiff was
-  {% for t in tiff %}
-var layerName = '{{ t.name }}'; 
-console.log("tiff",{{t.name}})
-var {{ t.name }} = L.tileLayer.wms('http://172.30.139.139:8080/geoserver/wms', {
+// Modified loop to add layers with zoom functionality
+{% for t in tiff %}
+  var layerName = '{{ t.name }}';
+  // Wrap your original layer creation code with the addLayerWithZoom function
+  var layer = addLayerWithZoom(layerName, L.tileLayer.wms('http://172.30.139.139:8080/geoserver/wms', {
     layers: layerName,
     transparent: true,
     format: 'image/png',
-});
-zoomToLayerExtent(layerName);
-
-overlayMaps[layerName] = {{ t.name }};
+  }));
+  
+  overlayMaps[layerName] = layer;
 {% endfor %}
 
-      
-  L.control.layers(baseMaps, overlayMaps, { collapsed: false, position: 'topleft' }).addTo(map);
+
+    L.control.layers(baseMaps, overlayMaps, { collapsed: false, position: 'topleft' }).addTo(map);
 </script>

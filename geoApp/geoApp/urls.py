@@ -14,8 +14,8 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from shp.views import index
-from shp.views import process_geospatial_data, ndvi_view,upload_clipped_tiff_and_create_geodata
+from shp.views import index, data_api
+from shp.views import process_geospatial_data, ndvi_view,upload_clipped_tiff_and_create_geodata, get_tiff_layer_points
 from note.views import note
 from django.conf import settings
 from django.conf.urls.static import static
@@ -28,7 +28,9 @@ urlpatterns = [
     path('note/', note, name='note'),
     path('geospace', process_geospatial_data, name='process_geospatial_data'),
     path('ndvi', ndvi_view, name='ndvi'),  
+    path('api/data/', data_api, name='data_api'),
     path('tiffupload', upload_clipped_tiff_and_create_geodata, name='tiffupload'),  
+    path('api/tiff-layer/<str:layer_name>/points/', get_tiff_layer_points, name='tiff_layer_points'),
 
 
 ]

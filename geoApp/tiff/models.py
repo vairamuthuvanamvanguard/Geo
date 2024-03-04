@@ -34,6 +34,18 @@ class Tiff(models.Model):
 
     def __str__(self):
         return self.name
+    
+class TiffLayer(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+    file_key = models.CharField(max_length=255)  # S3 key or similar
+
+class GeoPoint(models.Model):
+    tiff_layer = models.ForeignKey(TiffLayer, related_name='points', on_delete=models.CASCADE)
+    latitude = models.FloatField()
+    longitude = models.FloatField()
+
+
 
 # Post-save Signal for Tiff
 @receiver(post_save, sender=Tiff)
