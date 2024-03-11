@@ -38,7 +38,7 @@ class Tiff(models.Model):
 class TiffLayer(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField()
-    file_key = models.CharField(max_length=255)  # S3 key or similar
+    file_key = models.CharField(max_length=255) 
 
 class GeoPoint(models.Model):
     tiff_layer = models.ForeignKey(TiffLayer, related_name='points', on_delete=models.CASCADE)
