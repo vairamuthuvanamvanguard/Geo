@@ -1,26 +1,22 @@
-id: ''
+id: '214c3e60-4d5e-4a64-87c4-33c848db07a8'
 name: Chennaitiff  
 description: A brief description of your dataset  
-metadata_type: eo  
-
+metadata_type: eo3  
 metadata:
   product:
-    name: chennaitiff  
-    description: good_to_go  
-
+    name: dem_srtm    
   format:
     name: GeoTiff  
-
   spatial_reference: EPSG:4326  
+extent:
+  coord:
+    ll:
+      lat: 13.0012273  
+      lon: 80.0452817  
+    ur:
+      lat: 13.0739908  
+      lon: 80.1811070 
 
-  extent:
-    coord:
-      ll:
-        lat: 13.0012273  
-        lon: 80.0452817  
-      ur:
-        lat: 13.0739908  
-        lon: 80.1811070  
 
 
 image:
