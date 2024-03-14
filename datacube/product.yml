@@ -1,0 +1,11 @@
+name: dem_srtm
+description: "Custom DEM SRTM product definition"
+metadata_type: eo3
+metadata:
+  product:
+    name: dem_srtm
+measurements:
+  - name: elevation
+    dtype: int16
+    nodata: -32768
+    units: '1'
