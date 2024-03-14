@@ -1,0 +1,51 @@
+id: ''
+name: Chennaitiff  
+description: A brief description of your dataset  
+metadata_type: eo  
+
+metadata:
+  product:
+    name: chennaitiff  
+    description: good_to_go  
+
+  format:
+    name: GeoTiff  
+
+  spatial_reference: EPSG:4326  
+
+  extent:
+    coord:
+      ll:
+        lat: 13.0012273  
+        lon: 80.0452817  
+      ur:
+        lat: 13.0739908  
+        lon: 80.1811070  
+
+
+image:
+  bands:
+    B1:
+      path: 'clipped.tif'  
+      layer: 1
+    B2:
+      path: 'clipped.tif'
+      layer: 2
+    B3:
+      path: 'clipped.tif'
+      layer: 3
+    B4:
+      path: 'clipped.tif'
+      layer: 4
+    B5:
+      path: 'clipped.tif'
+      layer: 5
+    B6:
+      path: 'clipped.tif'
+      layer: 6
+    B7:
+      path: 'clipped.tif'
+      layer: 7
+
+lineage:
+  source_datasets: {}
