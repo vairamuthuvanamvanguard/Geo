@@ -7,7 +7,9 @@ var osm = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution:
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 }).addTo(map);
-
+var transportLayer = L.tileLayer('https://{s}.tile.thunderforest.com/transport/{z}/{x}/{y}.png?apikey=8743d4fe145049a58fac8e102620488c', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &amp; <a href="https://www.thunderforest.com/maps/transport/">Thunderforest</a>'
+}).addTo(map);
 var Esri_NatGeoWorldMap = L.tileLayer(
   "https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}",
   {
@@ -57,6 +59,7 @@ var baseMaps = {
   OSM: osm,
   "World Map": Esri_NatGeoWorldMap,
   "Light Map": CartoDB_DarkMatter,
+  "Transport Map":transportLayer
 };
 
 var overlayMaps = {

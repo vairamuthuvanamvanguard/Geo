@@ -160,10 +160,90 @@
 <script src="{% static './lib/leaflet.markercluster.js' %}"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 <script src="{% static './data/test.js' %}"></script>
-<script src="{% static './dist/main.js' %}"></script>
+
 <script src="{% static './dist/web-GIS.js' %}"></script>
 
 <script>
+    var map = L.map("map").setView([21.0, 78.0], 5);
+map.zoomControl.setPosition("topright");
+
+// adding osm tilelayer
+var osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  attribution:
+    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+}).addTo(map);
+var transportLayer = L.tileLayer('https://{s}.tile.thunderforest.com/transport/{z}/{x}/{y}.png?apikey=8743d4fe145049a58fac8e102620488c', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &amp; <a href="https://www.thunderforest.com/maps/transport/">Thunderforest</a>'
+}).addTo(map);
+
+
+var watercolorMap = L.tileLayer(
+  "https://stamen-tiles-{s}.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.{ext}",
+  {
+    attribution:
+      'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    subdomains: "abcd",
+    minZoom: 1,
+    maxZoom: 16,
+    ext: "jpg",
+  }
+);
+
+var st = L.tileLayer(
+  "https://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}{r}.{ext}",
+  {
+    attribution:
+      'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    subdomains: "abcd",
+    minZoom: 0,
+    maxZoom: 20,
+    ext: "png",
+  }
+);
+
+//Addming marker in the center of map
+var singleMarker = L.marker([20.5937, 78.9629])
+  .bindPopup("A pretty CSS3 popup.<br> Easily customizable.")
+  .openPopup();
+
+//add map scale
+L.control.scale().addTo(map);
+
+//Map coordinate display
+map.on("mousemove", function (e) {
+  $(".coordinate").html(`Lat: ${e.latlng.lat} Lng: ${e.latlng.lng}`);
+});
+
+
+
+var Esri_NatGeoWorldMap = L.tileLayer(
+  "https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}",
+  {
+    attribution:
+      "Tiles &copy; Esri &mdash; National Geographic, Esri, DeLorme, NAVTEQ, UNEP-WCMC, USGS, NASA, ESA, METI, NRCAN, GEBCO, NOAA, iPC",
+    maxZoom: 16,
+  }
+);
+
+var CartoDB_DarkMatter = L.tileLayer(
+  "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+  {
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: "abcd",
+    maxZoom: 20,
+  }
+);
+//Leaflet layer control
+var baseMaps = {
+  OSM: osm,
+  "World Map": Esri_NatGeoWorldMap,
+  "Light Map": CartoDB_DarkMatter,
+  "Transport Map":transportLayer
+};
+
+
+
     $(".leaflet-prevent").on("click", L.DomEvent.stopPropagation);
     var mapPinToggler =true;
     $('.pin').on('click', function(){
@@ -259,4 +339,5 @@ function addLayerWithZoom(layerName, layer) {
 
 
     L.control.layers(baseMaps, overlayMaps, { collapsed: false, position: 'topleft' }).addTo(map);
+    
 </script>

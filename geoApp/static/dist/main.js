@@ -7,6 +7,10 @@ var osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution:
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 }).addTo(map);
+var transportLayer = L.tileLayer('https://{s}.tile.thunderforest.com/transport/{z}/{x}/{y}.png?apikey=8743d4fe145049a58fac8e102620488c', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &amp; <a href="https://www.thunderforest.com/maps/transport/">Thunderforest</a>'
+}).addTo(map);
+
 
 var watercolorMap = L.tileLayer(
   "https://stamen-tiles-{s}.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.{ext}",
@@ -59,7 +63,8 @@ marker.addTo(map);
 var baseMaps = {
   OSM: osm,
   "Water Color Map": watercolorMap,
-  "Stamen Toner": st,
+  // "Stamen Toner": st,
+  "Transport Map":transportLayer
 };
 
 var overlayMaps = {
